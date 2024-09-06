@@ -30,14 +30,15 @@
 
 #include <assert.h>
 
-namespace instronimbus::logger {
+namespace logger {
 void AssertionHandler(const char *expr_str, const char *file, int line);
 }
-#define IM_ASSERT(_EXPR)                                                                       \
-  do {                                                                                         \
-    if (!(_EXPR)) [[unlikely]] { instronimbus::logger::AssertionHandler(#_EXPR, __FILE__, __LINE__); } \
+#define IM_ASSERT(_EXPR)                                                       \
+  do {                                                                         \
+    if (!(_EXPR)) [[unlikely]] {                                               \
+      logger::AssertionHandler(#_EXPR, __FILE__, __LINE__);                    \
+    }                                                                          \
   } while (0)
-
 
 //---- Define attributes of all API symbols declarations, e.g. for DLL under
 // Windows
