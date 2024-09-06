@@ -1,0 +1,17 @@
+cmake_minimum_required(VERSION 3.16)
+project(imgui)
+
+set(CMAKE_CXX_STANDARD 17)
+
+add_library(imgui_all_includes INTERFACE)
+
+add_subdirectory(imgui)
+add_subdirectory(implot)
+add_subdirectory(imnodes)
+add_subdirectory(custom)
+add_subdirectory(imgui_notify)
+add_subdirectory(TextEditor)
+
+set(IMGUI_LIBRARIES
+    imgui_imgui imgui_implot imgui_imnodes imgui_custom imgui_color_text_editor
+    PARENT_SCOPE)
