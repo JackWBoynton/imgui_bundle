@@ -47,5 +47,5 @@ endif()
 add_library(imgui_includes INTERFACE)
 target_include_directories(imgui_includes
                            INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/inc)
-target_include_directories(imgui_all_includes
-                           INTERFACE ${CMAKE_CURRENT_SOURCE_DIR} misc/freetype)
+target_include_directories(
+  imgui_all_includes INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/inc misc/freetype)
