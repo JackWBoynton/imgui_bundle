@@ -5,7 +5,7 @@ set(CMAKE_CXX_STANDARD 17)
 
 include(FetchContent)
 
-if(NOT INSTRONIMBUS_EXTERNAL_PLUGIN_BUILD)
+if(IMGUI_BUNDLE_BUILD_OBJECT_LIBS)
   add_library(imgui_custom OBJECT imgui_impl_opengl3.cpp imgui_impl_glfw.cpp)
 
   target_include_directories(imgui_custom PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
@@ -30,9 +30,12 @@ if(NOT INSTRONIMBUS_EXTERNAL_PLUGIN_BUILD)
     set(GLFW_LIBRARIES "glfw3")
   endif()
 
-  target_include_directories(imgui_custom PUBLIC ${FREETYPE_INCLUDE_DIRS} ${OpenGL_INCLUDE_DIRS})
-  target_link_directories(imgui_custom PUBLIC ${FREETYPE_LIBRARY_DIRS} ${OpenGL_LIBRARY_DIRS})
-  target_link_libraries(imgui_custom PUBLIC ${OPENGL_LIBRARIES} ${GLFW_LIBRARIES})
+  target_include_directories(imgui_custom PUBLIC ${FREETYPE_INCLUDE_DIRS}
+                                                 ${OpenGL_INCLUDE_DIRS})
+  target_link_directories(imgui_custom PUBLIC ${FREETYPE_LIBRARY_DIRS}
+                          ${OpenGL_LIBRARY_DIRS})
+  target_link_libraries(imgui_custom PUBLIC ${OPENGL_LIBRARIES}
+                                            ${GLFW_LIBRARIES})
   if(WIN32)
     target_link_libraries(imgui_custom PUBLIC opengl32)
   elseif(APPLE)
@@ -40,10 +43,13 @@ if(NOT INSTRONIMBUS_EXTERNAL_PLUGIN_BUILD)
     find_library(IOKIT_FRAMEWORK IOKit)
     find_library(CORE_VIDEO_FRAMEWORK CoreVideo)
     find_library(CORE_FOUNDATION_FRAMEWORK CoreFoundation)
-    target_link_libraries(imgui_custom PUBLIC ${COCOA_FRAMEWORK} ${IOKIT_FRAMEWORK} ${CORE_VIDEO_FRAMEWORK} ${CORE_FOUNDATION_FRAMEWORK})
+    target_link_libraries(
+      imgui_custom PUBLIC ${COCOA_FRAMEWORK} ${IOKIT_FRAMEWORK}
+                          ${CORE_VIDEO_FRAMEWORK} ${CORE_FOUNDATION_FRAMEWORK})
   else()
     target_link_libraries(imgui_custom PUBLIC dl X11 pthread)
   endif()
 endif()
 
-target_include_directories(imgui_all_includes INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
+target_include_directories(imgui_all_includes
+                           INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})

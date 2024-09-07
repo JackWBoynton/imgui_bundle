@@ -3,6 +3,11 @@ project(imgui)
 
 set(CMAKE_CXX_STANDARD 17)
 
+include(cmake/os.cmake)
+detect_os()
+
+option(IMGUI_BUNDLE_BUILD_OBJECT_LIBS "Build bundled lib's object libraries" ON)
+
 add_library(imgui_all_includes INTERFACE)
 
 add_subdirectory(imgui)
