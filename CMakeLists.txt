@@ -6,7 +6,18 @@ set(CMAKE_CXX_STANDARD 17)
 include(cmake/os.cmake)
 detect_os()
 
+# determine whether this is a standalone project or included by other projects
+if(NOT DEFINED IMGUI_BUNDLE_STANDALONE_PROJECT)
+  if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
+    set(IMGUI_BUNDLE_STANDALONE_PROJECT ON)
+  else()
+    set(IMGUI_BUNDLE_STANDALONE_PROJECT OFF)
+  endif()
+endif()
+
 option(IMGUI_BUNDLE_BUILD_OBJECT_LIBS "Build bundled lib's object libraries" ON)
+option(IMGUI_BUNDLE_BUILD_EXAMPLE "Build bundled example"
+       ${IMGUI_BUNDLE_STANDALONE_PROJECT})
 
 add_library(imgui_all_includes INTERFACE)
 
@@ -18,5 +29,8 @@ add_subdirectory(imgui_notify)
 add_subdirectory(TextEditor)
 
 set(IMGUI_LIBRARIES
-    imgui_imgui imgui_implot imgui_imnodes imgui_custom imgui_color_text_editor
-    PARENT_SCOPE)
+imgui_imgui imgui_implot imgui_imnodes imgui_custom imgui_color_text_editor)
+
+if(IMGUI_BUNDLE_BUILD_EXAMPLE)
+  add_subdirectory(example)
+endif()
