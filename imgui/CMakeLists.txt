@@ -7,12 +7,12 @@ set(CMAKE_CXX_STANDARD 17)
 if(IMGUI_BUNDLE_BUILD_OBJECT_LIBS)
   add_library(
     imgui_imgui OBJECT
-    imgui.cpp
-    imgui_demo.cpp
-    imgui_draw.cpp
-    imgui_tables.cpp
-    imgui_widgets.cpp
-    imgui_spectrum.cpp
+    src/imgui.cpp
+    src/imgui_demo.cpp
+    src/imgui_draw.cpp
+    src/imgui_tables.cpp
+    src/imgui_widgets.cpp
+    src/imgui_spectrum.cpp
     misc/freetype/imgui_freetype.cpp)
 
   target_include_directories(imgui_imgui PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}
@@ -45,6 +45,7 @@ if(IMGUI_BUNDLE_BUILD_OBJECT_LIBS)
 endif()
 
 add_library(imgui_includes INTERFACE)
-target_include_directories(imgui_includes INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
+target_include_directories(imgui_includes
+                           INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/inc)
 target_include_directories(imgui_all_includes
                            INTERFACE ${CMAKE_CURRENT_SOURCE_DIR} misc/freetype)
