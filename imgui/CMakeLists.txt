@@ -16,7 +16,7 @@ if(IMGUI_BUNDLE_BUILD_OBJECT_LIBS)
     misc/freetype/imgui_freetype.cpp)
 
   target_include_directories(imgui_imgui PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/inc
-                                                misc/freetype)
+                                                ${CMAKE_CURRENT_SOURCE_DIR})
 
   target_compile_options(imgui_imgui PRIVATE -Wno-unknown-warning-option)
 
