@@ -227,6 +227,7 @@ struct ImNodesContext;
 // By default, the library creates an editor context behind the scenes, so using any of the imnodes
 // functions doesn't require you to explicitly create a context.
 struct ImNodesEditorContext;
+struct ImNodesViewerContext;
 
 // Callback type used to specify special behavior when hovering a node in the minimap
 #ifndef ImNodesMiniMapNodeHoveringCallback
@@ -248,13 +249,6 @@ void            DestroyContext(ImNodesContext* ctx = NULL); // NULL = destroy cu
 ImNodesContext* GetCurrentContext();
 void            SetCurrentContext(ImNodesContext* ctx);
 
-ImNodesEditorContext* EditorContextCreate();
-void                  EditorContextFree(ImNodesEditorContext*);
-void                  EditorContextSet(ImNodesEditorContext*);
-ImVec2                EditorContextGetPanning();
-void                  EditorContextResetPanning(const ImVec2& pos);
-void                  EditorContextMoveToNode(const int node_id);
-
 ImNodesIO& GetIO();
 
 // Returns the global style struct. See the struct declaration for default values.
@@ -264,6 +258,23 @@ ImNodesStyle& GetStyle();
 void StyleColorsDark(ImNodesStyle* dest = NULL); // on by default
 void StyleColorsClassic(ImNodesStyle* dest = NULL);
 void StyleColorsLight(ImNodesStyle* dest = NULL);
+
+// Use PushColorStyle and PopColorStyle to modify ImNodesStyle::Colors mid-frame.
+void PushColorStyle(ImNodesCol item, unsigned int color);
+void PopColorStyle();
+void PushStyleVar(ImNodesStyleVar style_item, float value);
+void PushStyleVar(ImNodesStyleVar style_item, const ImVec2& value);
+void PopStyleVar(int count = 1);
+
+namespace Editor
+{
+
+ImNodesEditorContext* EditorContextCreate();
+void                  EditorContextFree(ImNodesEditorContext*);
+void                  EditorContextSet(ImNodesEditorContext*);
+ImVec2                EditorContextGetPanning();
+void                  EditorContextResetPanning(const ImVec2& pos);
+void                  EditorContextMoveToNode(const int node_id);
 
 // The top-level function call. Call this before calling BeginNode/EndNode. Calling this function
 // will result the node editor grid workspace being rendered.
@@ -277,13 +288,6 @@ void MiniMap(
     const ImNodesMiniMapLocation                     location = ImNodesMiniMapLocation_TopLeft,
     const ImNodesMiniMapNodeHoveringCallback         node_hovering_callback = NULL,
     const ImNodesMiniMapNodeHoveringCallbackUserData node_hovering_callback_data = NULL);
-
-// Use PushColorStyle and PopColorStyle to modify ImNodesStyle::Colors mid-frame.
-void PushColorStyle(ImNodesCol item, unsigned int color);
-void PopColorStyle();
-void PushStyleVar(ImNodesStyleVar style_item, float value);
-void PushStyleVar(ImNodesStyleVar style_item, const ImVec2& value);
-void PopStyleVar(int count = 1);
 
 // id can be any positive or negative integer, but INT_MIN is currently reserved for internal use.
 void BeginNode(int id);
@@ -435,4 +439,27 @@ void SaveEditorStateToIniFile(const ImNodesEditorContext* editor, const char* fi
 
 void LoadCurrentEditorStateFromIniFile(const char* file_name);
 void LoadEditorStateFromIniFile(ImNodesEditorContext* editor, const char* file_name);
+
+} // namespace Editor
+
+namespace Viewer
+{
+
+ImNodesViewerContext* ViewerContextCreate();
+void                  ViewerContextFree(ImNodesViewerContext*);
+void                  ViewerContextSet(ImNodesViewerContext*);
+ImVec2                ViewerContextGetPanning();
+void                  ViewerContextResetPanning(const ImVec2& pos);
+void                  ViewerContextMoveToWidget(const int node_id);
+
+// The top-level function call. Call this before calling BeginWidget/EndWidget. Calling this
+// function will result the grid layout widget viewer
+void BeginWidgetViewer(ImNodesEditorContext* editor = NULL);
+void EndWidgetViewer();
+
+void BeginWidget(int id);
+void EndWidget();
+
+} // namespace Viewer
+
 } // namespace IMNODES_NAMESPACE

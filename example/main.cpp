@@ -12,12 +12,15 @@
 // folder).
 // - Introduction, links and more at the top of imgui.cpp
 
+#include "imgrid.h"
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
 #include "imnodes.h"
 #include "implot.h"
 #include <stdio.h>
+#include <string>
+#include <vector>
 #define GL_SILENCE_DEPRECATION
 #if defined(IMGUI_IMPL_OPENGL_ES2)
 #include <GLES2/gl2.h>
@@ -52,6 +55,50 @@ void AssertionHandler(const char *expr_str, const char *file, int line) {
 }
 
 } // namespace logger
+
+class TestNode {
+public:
+  TestNode(std::string name) : name(name), m_id(id_counter++) {}
+
+  void RenderEditor();
+  void RenderViewer();
+
+private:
+  std::string name;
+  int m_id;
+
+  static int id_counter;
+};
+
+int TestNode::id_counter = 0;
+
+// NOTE: the two funcs here. you MUST have the same id for both calls
+void TestNode::RenderEditor() {
+  ImNodes::Editor::BeginNode(m_id);
+  {
+    ImNodes::Editor::BeginNodeTitleBar();
+    ImGui::TextUnformatted("simple node :)");
+    ImNodes::Editor::EndNodeTitleBar();
+    ImGui::TextUnformatted(name.c_str());
+
+    ImNodes::Editor::BeginInputAttribute(2);
+    ImGui::Text("input");
+    ImNodes::Editor::EndInputAttribute();
+
+    ImNodes::Editor::BeginOutputAttribute(3);
+    ImGui::Indent(40);
+    ImGui::Text("output");
+    ImNodes::Editor::EndOutputAttribute();
+  }
+  ImNodes::Editor::EndNode();
+
+  ImNodes::Editor::SetNodeGridSpacePos(m_id, ImVec2(100, 100));
+}
+void TestNode::RenderViewer() {
+  ImNodes::Viewer::BeginWidget(m_id);
+  { ImGui::TextUnformatted(name.c_str()); }
+  ImNodes::Viewer::EndWidget();
+}
 
 // Main code
 int main(int, char **) {
@@ -95,6 +142,7 @@ int main(int, char **) {
   ImGui::CreateContext();
   ImPlot::CreateContext();
   ImNodes::CreateContext();
+  ImGrid::CreateContext();
   ImGuiIO &io = ImGui::GetIO();
   (void)io;
   io.ConfigFlags |=
@@ -146,6 +194,9 @@ int main(int, char **) {
   bool show_demo_window = true;
   bool show_another_window = false;
   ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
+
+  static std::vector<TestNode> nodes;
+  nodes.emplace_back("node 1");
 
   // Main loop
 #ifdef __EMSCRIPTEN__
@@ -214,27 +265,56 @@ int main(int, char **) {
       ImGui::End();
     }
 
-    ImGui::Begin("simple node editor");
+    if (ImGui::Begin("simple node editor")) {
+      if (ImGui::Button("Add Node")) {
+        nodes.emplace_back("node " + std::to_string(nodes.size() + 1));
+      }
 
-    ImNodes::BeginNodeEditor();
-    ImNodes::BeginNode(1);
+      ImNodes::Editor::BeginNodeEditor();
+      for (auto &node : nodes) {
+        node.RenderEditor();
+      }
+      ImNodes::Editor::EndNodeEditor();
+    }
+    ImGui::End();
 
-    ImNodes::BeginNodeTitleBar();
-    ImGui::TextUnformatted("simple node :)");
-    ImNodes::EndNodeTitleBar();
+    if (ImGui::Begin("simple node viewer")) {
+      ImNodes::Viewer::BeginWidgetViewer();
+      for (auto &node : nodes) {
+        node.RenderViewer();
+      }
+      ImNodes::Viewer::EndWidgetViewer();
+    }
+    ImGui::End();
 
-    ImNodes::BeginInputAttribute(2);
-    ImGui::Text("input");
-    ImNodes::EndInputAttribute();
+    ImGui::SetNextWindowSize(ImVec2(400, 400), ImGuiCond_FirstUseEver);
+    static float f = 0;
+    if (ImGui::Begin("Grid")) {
+      ImGrid::BeginGrid();
+      ImGrid::BeginEntry(0);
+      {
+        ImGrid::BeginEntryTitleBar();
+        ImGui::Text("Entry 0");
+        ImGrid::EndEntryTitleBar();
+        ImGui::SliderFloat("float", &f, 0.0f, 1.0f);
+      }
+      ImGrid::EndEntry();
 
-    ImNodes::BeginOutputAttribute(3);
-    ImGui::Indent(40);
-    ImGui::Text("output");
-    ImNodes::EndOutputAttribute();
+      ImGrid::BeginEntry(1);
+      {
 
-    ImNodes::EndNode();
-    ImNodes::EndNodeEditor();
+        ImGrid::BeginEntryTitleBar();
+        ImGui::Text("Entry 1");
+        ImGrid::EndEntryTitleBar();
+      }
+      ImGrid::EndEntry();
+      ImGrid::EndGrid();
+    }
+    ImGui::End();
 
+    if (ImGui::Begin("Grid Debug")) {
+      ImGrid::RenderDebug();
+    }
     ImGui::End();
 
     // 3. Show another simple window.

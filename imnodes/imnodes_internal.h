@@ -31,8 +31,10 @@ enum ImNodesScope_
 {
     ImNodesScope_None = 1,
     ImNodesScope_Editor = 1 << 1,
-    ImNodesScope_Node = 1 << 2,
-    ImNodesScope_Attribute = 1 << 3
+    ImNodesScope_Viewer = 1 << 1,
+    ImNodesScope_Node = 1 << 3,
+    ImNodesScope_Attribute = 1 << 4,
+    ImNodesScope_Widget = 1 << 5,
 };
 
 enum ImNodesAttributeType_
@@ -159,6 +161,37 @@ struct ImNodeData
     }
 
     ~ImNodeData() { Id = INT_MIN; }
+};
+
+struct ImWidgetData
+{
+
+    int    Id;
+    ImVec2 Origin;
+    ImRect TitleBarContentRect;
+    ImRect Rect;
+
+    struct
+    {
+        ImU32 Background, BackgroundHovered, BackgroundSelected, Outline, Titlebar, TitlebarHovered,
+            TitlebarSelected;
+    } ColorStyle;
+
+    struct
+    {
+        float  CornerRounding;
+        ImVec2 Padding;
+        float  BorderThickness;
+    } LayoutStyle;
+
+    bool Draggable;
+
+    ImWidgetData(const int widget_id)
+        : Id(widget_id), Origin(0.0f, 0.0f), Rect(ImVec2(0.0f, 0.0f), ImVec2(0.0f, 0.0f)),
+          ColorStyle(), LayoutStyle(), Draggable(true)
+    {
+    }
+    ~ImWidgetData() { Id = INT_MIN; }
 };
 
 struct ImPinData
@@ -291,21 +324,58 @@ struct ImNodesEditorContext
     }
 };
 
+struct ImNodesViewerContext
+{
+    ImObjectPool<ImWidgetData> Widgets;
+
+    ImVector<int> WidgetDepthOrder;
+
+    ImVec2 Panning;
+    ImVec2 AutoPanningDelta;
+
+    ImRect GridContentBounds;
+
+    ImVector<int> SelectedWidgetIndices;
+
+    ImVector<ImVec2> SelectedWidgetOffsets;
+    ImVec2           PrimaryWidgetOffset;
+
+    ImClickInteractionState ClickInteraction;
+
+    ImNodesViewerContext()
+        : Widgets(), Panning(0.f, 0.f), SelectedWidgetIndices(), SelectedWidgetOffsets(),
+          PrimaryWidgetOffset(0.f, 0.f), ClickInteraction()
+    {
+    }
+};
+
 struct ImNodesContext
 {
     ImNodesEditorContext* DefaultEditorCtx;
     ImNodesEditorContext* EditorCtx;
 
+    ImNodesViewerContext* DefaultViewerCtx;
+    ImNodesViewerContext* ViewerCtx;
+
     // Canvas draw list and helper state
-    ImDrawList*   CanvasDrawList;
+    ImDrawList* CanvasEditorDrawList;
+    ImDrawList* CanvasViewerDrawList;
+
+    // EDITOR SPECIFIC
     ImGuiStorage  NodeIdxToSubmissionIdx;
     ImVector<int> NodeIdxSubmissionOrder;
     ImVector<int> NodeIndicesOverlappingWithMouse;
     ImVector<int> OccludedPinIndices;
+    // VIEWER SPECIFIC
+    ImGuiStorage  WidgetIdxToSubmissionIdx;
+    ImVector<int> WidgetIdxSubmissionOrder;
+    ImVector<int> WidgetIndicesOverlappingWithMouse;
 
     // Canvas extents
-    ImVec2 CanvasOriginScreenSpace;
-    ImRect CanvasRectScreenSpace;
+    ImVec2 EditorCanvasOriginScreenSpace;
+    ImRect EditorCanvasRectScreenSpace;
+    ImVec2 ViewerCanvasOriginScreenSpace;
+    ImRect ViewerCanvasRectScreenSpace;
 
     // Debug helpers
     ImNodesScope CurrentScope;
@@ -321,13 +391,19 @@ struct ImNodesContext
     ImVector<int> AttributeFlagStack;
 
     // UI element state
+    // EDITOR SPECIFIC
     int CurrentNodeIdx;
     int CurrentPinIdx;
     int CurrentAttributeId;
+    // VIEWER SPECIFIC
+    int CurrentWidgetIdx;
 
+    // EDITIOR
     ImOptionalIndex HoveredNodeIdx;
     ImOptionalIndex HoveredLinkIdx;
     ImOptionalIndex HoveredPinIdx;
+    // VIEWER
+    ImOptionalIndex HoveredWidgetIdx;
 
     ImOptionalIndex DeletedLinkIdx;
     ImOptionalIndex SnapLinkIdx;
@@ -360,6 +436,13 @@ static inline ImNodesEditorContext& EditorContextGet()
     // No editor context was set! Did you forget to call ImNodes::CreateContext()?
     IM_ASSERT(GImNodes->EditorCtx != NULL);
     return *GImNodes->EditorCtx;
+}
+
+static inline ImNodesViewerContext& ViewerContextGet()
+{
+    // No viewer context was set! Did you forget to call ImNodes::CreateContext()?
+    IM_ASSERT(GImNodes->ViewerCtx != NULL);
+    return *GImNodes->ViewerCtx;
 }
 
 // [SECTION] ObjectPool implementation

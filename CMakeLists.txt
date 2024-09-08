@@ -27,9 +27,10 @@ add_subdirectory(imnodes)
 add_subdirectory(custom)
 add_subdirectory(imgui_notify)
 add_subdirectory(TextEditor)
+add_subdirectory(imgrid)
 
 set(IMGUI_LIBRARIES
-imgui_imgui imgui_implot imgui_imnodes imgui_custom imgui_color_text_editor)
+imgui_imgui imgui_implot imgui_imnodes imgui_custom imgui_color_text_editor imgui_imgrid)
 
 if(IMGUI_BUNDLE_BUILD_EXAMPLE)
   add_subdirectory(example)
