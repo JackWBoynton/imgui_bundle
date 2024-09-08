@@ -9,6 +9,9 @@
 #include <limits.h>
 #include <map>
 
+#define IM_MIN(x, y) x > y ? y : x
+#define IM_MAX(x, y) x > y ? x : y
+
 struct ImGridContext;
 
 extern ImGridContext *GImGrid;
@@ -98,20 +101,90 @@ struct ImGridClickInteractionState {
 };
 
 struct ImGridPosition {
-  int x, y, w, h;
+  float x, y, w, h;
 
   void Reset() { x = y = w = h = -1; };
+  void SetDefault(const ImGridPosition &defaults) {
+    if (x == -1)
+      x = defaults.x;
+    if (y == -1)
+      y = defaults.y;
+    if (w == -1)
+      w = defaults.w;
+    if (h == -1)
+      h = defaults.h;
+  }
+
+  ImGridPosition() : x(-1), y(-1), w(-1), h(-1) {}
+  ImGridPosition(float _x, float _y, float _w, float _h)
+      : x(_x), y(_y), w(_w), h(_h) {}
+
+  operator bool() const { return (x != -1 && y != -1 && w != -1 && h != -1); }
 };
 
-struct ImGridMoveOptions {};
+struct ImGridEntryData;
 
-struct ImGridEntryDataWrapper {
+struct ImGridEntryInternal {
+  ImGridPosition Position;
   ImGridEntryData *Parent;
-  ImGridPosition GridPosition;
-  bool AutoPosition;
 
-  ImGridEntryDataWrapper(ImGridEntryData *parent, ImGridPosition position)
-      : Parent(parent), GridPosition(position), AutoPosition(false) {}
+  bool AutoPosition;
+  float MinW, MinH;
+  float MaxW, MaxH;
+  bool NoResize;
+  bool NoMove;
+  bool Locked;
+
+  bool Dirty;
+  bool Updating;
+  bool Moving;
+  bool SkipDown;
+  ImGridPosition PrevPosition;
+  ImGridPosition Rect;
+  ImVec2 LastUIPosition;
+  ImGridPosition LastTried;
+  ImGridPosition WillFitPos;
+
+  ImGridEntryInternal(ImGridPosition pos, ImGridEntryData *parent)
+      : Position(pos), Parent(parent) {}
+
+  ImGridEntryInternal(ImGridEntryData *parent) : Position(), Parent(parent) {}
+};
+
+// return a && b && a.x === b.x && a.y === b.y && (a.w || 1) === (b.w || 1) &&
+// (a.h || 1) === (b.h || 1);
+inline bool operator==(const ImGridPosition &lhs, const ImGridPosition &rhs) {
+  return (lhs.x == rhs.x) && (lhs.y == rhs.y) &&
+         ((lhs.w != -1 ? lhs.w : 1) == (rhs.w != -1 ? rhs.w : 1)) &&
+         ((lhs.h != -1 ? lhs.h : 1) == (rhs.h != -1 ? rhs.h : 1));
+}
+
+struct ImGridMoveOptions {
+  ImGridPosition Position;
+  float MinW, MinH;
+  float MaxW, MaxH;
+
+  ImGridEntryInternal *Skip;
+  bool Pack;
+  bool Nested;
+
+  int CellWidth;
+  int CellHeight;
+
+  int MarginTop;
+  int MarginBottom;
+  int MarginLeft;
+  int MarginRight;
+
+  ImGridPosition Rect;
+
+  bool Resizing;
+
+  ImGridEntryInternal *Collide;
+
+  bool ForceCollide;
+
+  ImGridMoveOptions() {}
 };
 
 struct ImGridEntryData {
@@ -120,14 +193,12 @@ struct ImGridEntryData {
   ImRect Rect;
   ImRect TitleBarContentRect;
 
-  ImGridPosition GridPosition;
-  ImGridPosition PrevGridPosition;
-  bool Modified;
-  bool AutoPosition;
+  ImGridEntryInternal GridData;
 
   bool Draggable;
   bool Resizable;
   bool Locked;
+  bool Moving;
 
   ImRect PreviewRect;
   bool HasPreview;
@@ -148,13 +219,30 @@ struct ImGridEntryData {
   ImGridEntryData(const int id)
       : Id(id), Origin(0, 0), Rect(), TitleBarContentRect(), Draggable(true),
         Resizable(true), ColorStyle(), LayoutStyle(), HasPreview(false),
-        PreviewHeld(false), PreviewHovered(false) {}
+        PreviewHeld(false), PreviewHovered(false), GridData(this) {}
   ~ImGridEntryData() { Id = INT_MIN; }
 };
 
-struct ImGridRow {
-  ImVector<int> EntryIds;
-  int DY;
+struct ImGridInternal {
+  int MaxRow;
+  int Column;
+  bool Float;
+  bool PrevFloat;
+  bool BatchMode;
+  bool InColumnResize;
+  bool HasLocked;
+  bool Loading;
+  ImVector<ImGridEntryInternal *> AddedEntries;
+  ImVector<ImGridEntryInternal *> RemovedEntries;
+  ImVector<ImGridEntryInternal *> Entries;
+  std::map<int, ImVector<ImGridEntryInternal>> CacheLayouts;
+
+  ImGridInternal(int column, int max_row,
+                 ImVector<ImGridEntryInternal *> &nodes, bool _float)
+      : Column(column), MaxRow(max_row), Entries(nodes), Float(_float) {}
+  ImGridInternal(int column, int max_row)
+      : Column(column), MaxRow(max_row), Entries(), Float(false) {}
+  ImGridInternal() = default;
 };
 
 struct ImGridContext {
@@ -195,17 +283,6 @@ struct ImGridContext {
 
   ImVec2 MousePos;
 
-  // Layout related state
-  int GridMaxRows;
-  int GridColumn;
-  bool GridFloat;
-  bool GridPrevFloat;
-  bool GridBatchMode;
-  ImVector<ImGridEntryData *> GridAddedEntries;
-  ImVector<ImGridEntryData *> GridRemovedEntries;
-  ImVector<ImGridEntryData *> GridEntries;
-  ImVector<std::map<int, ImGridEntryDataWrapper>> GridCacheLayouts;
-
   bool LeftMouseClicked;
   bool LeftMouseReleased;
   bool AltMouseClicked;
@@ -213,6 +290,8 @@ struct ImGridContext {
   bool AltMouseDragging;
   float AltMouseScrollDelta;
   bool MultipleSelectModifier;
+
+  ImGridInternal *Grid;
 };
 
 namespace ImGrid {

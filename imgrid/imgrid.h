@@ -56,13 +56,14 @@ enum ImGridColumnFlags_ {
 struct ImGuiContext;
 struct ImVec2;
 struct ImRect;
-struct ImGridEntryData;
+struct ImGridEntryInternal;
 
 struct ImGridColumnOptions {
   ImGridColumnFlags Flags;
-  std::function<void(int, int, ImVector<ImGridEntryData *>,
-                     ImVector<ImGridEntryData *>)>
+  std::function<void(int, int, ImVector<ImGridEntryInternal *>,
+                     ImVector<ImGridEntryInternal *>)>
       Func;
+  ImGridColumnOptions(ImGridColumnFlags flags) : Flags(flags), Func() {}
 };
 
 struct ImGridStyle {
