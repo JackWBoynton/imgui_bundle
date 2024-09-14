@@ -21,12 +21,14 @@ option(IMGUI_BUNDLE_BUILD_EXAMPLE "Build bundled example"
 
 add_library(imgui_all_includes INTERFACE)
 
-add_subdirectory(imgui)
+add_subdirectory(imgui) # adds library imgui_imgui and includes imgui_includes
 add_subdirectory(implot)
 add_subdirectory(imnodes)
 add_subdirectory(custom)
 add_subdirectory(imgui_notify)
 add_subdirectory(TextEditor)
+
+set(IMGRID_IMGUI_TARGET imgui_imgui)
 add_subdirectory(imgrid)
 
 set(IMGUI_LIBRARIES imgui_imgui imgui_implot imgui_imnodes imgui_custom
