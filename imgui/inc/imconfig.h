@@ -36,7 +36,7 @@ void AssertionHandler(const char *expr_str, const char *file, int line);
 #define IM_ASSERT(_EXPR)                                                       \
   do {                                                                         \
     if (!(_EXPR)) [[unlikely]] {                                               \
-      logger::AssertionHandler(#_EXPR, __FILE__, __LINE__);                    \
+      ::logger::AssertionHandler(#_EXPR, __FILE__, __LINE__);                  \
     }                                                                          \
   } while (0)
 
