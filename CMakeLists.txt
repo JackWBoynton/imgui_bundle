@@ -16,8 +16,7 @@ if(NOT DEFINED IMGUI_BUNDLE_STANDALONE_PROJECT)
 endif()
 
 option(IMGUI_BUNDLE_BUILD_OBJECT_LIBS "Build bundled lib's object libraries" ON)
-option(IMGUI_BUNDLE_BUILD_EXAMPLE "Build bundled example"
-       ${IMGUI_BUNDLE_STANDALONE_PROJECT})
+option(IMGUI_BUNDLE_BUILD_EXAMPLE "Build bundled example" ${IMGUI_BUNDLE_STANDALONE_PROJECT})
 
 add_library(imgui_all_includes INTERFACE)
 
@@ -34,8 +33,9 @@ add_subdirectory(TextEditor)
 set(IMGRID_IMGUI_TARGET imgui_imgui)
 add_subdirectory(imgrid)
 
-set(IMGUI_LIBRARIES imgui_imgui imgui_implot imgui_imnodes imgui_custom
-                    imgui_color_text_editor imgui_imgrid)
+add_subdirectory(im_dynamic_editor)
+
+set(IMGUI_LIBRARIES imgui_imgui imgui_implot imgui_imnodes imgui_custom imgui_color_text_editor imgui_imgrid)
 
 if(IMGUI_BUNDLE_BUILD_EXAMPLE)
   add_subdirectory(example)
