@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.16)
 # https://github.com/ocornut/imgui
 project(imgui_imgui)
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 
 if(IMGUI_BUNDLE_BUILD_OBJECT_LIBS)
   add_library(
